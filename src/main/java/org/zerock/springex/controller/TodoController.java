@@ -69,7 +69,7 @@ public class TodoController {
     }
 
     @GetMapping({"/read", "/modify"})
-    public void read(Long tno, Model model){
+    public void read(Long tno, PageRequestDTO pageRequestDTO, Model model){
 
         TodoDTO todoDTO = todoService.getOne(tno);
 
@@ -79,20 +79,23 @@ public class TodoController {
     }
 
     @PostMapping("/remove")
-    public String remove(Long tno, RedirectAttributes redirectAttributes){
+    public String remove(Long tno, PageRequestDTO pageRequestDTO, RedirectAttributes redirectAttributes){
 
         log.info("--------------------remove--------------------");
         log.info("tno : " + tno);
 
         todoService.remove(tno);
 
-        return "redirect:/todo/list";
+        redirectAttributes.addAttribute("page", 1); //삭제하면 page를 1로 이동하도록 attribute전달
+        redirectAttributes.addAttribute("size", pageRequestDTO.getSize()); //dto에서 size받아서 전달(10)
+        return "redirect:/todo/list" + pageRequestDTO.getLink();
     }
 
     @PostMapping("modify")
     public String modify(@Valid TodoDTO todoDTO,
                          BindingResult bindingResult,
-                         RedirectAttributes redirectAttributes){
+                         RedirectAttributes redirectAttributes,
+                         PageRequestDTO pageRequestDTO){
 
         if (bindingResult.hasErrors()){
             log.info("has errors...");
@@ -106,7 +109,11 @@ public class TodoController {
 
         todoService.modify(todoDTO);
 
-        return "redirect:/todo/list";
+//        redirectAttributes.addAttribute("page", pageRequestDTO.getPage());
+//        redirectAttributes.addAttribute("size", pageRequestDTO.getSize());
+        redirectAttributes.addAttribute("tno", todoDTO.getTno());
+
+        return "redirect:/todo/read";
     }
 
 } //class
